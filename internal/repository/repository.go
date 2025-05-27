@@ -26,7 +26,7 @@ type Repository struct {
 func NewRepository(path string) (*Repository, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid path: %w", err)
+		return nil, fmt.Errorf("invalid path: %w", err)
 	}
 
 	minigitDir := filepath.Join(absPath, ".minigit")
@@ -38,16 +38,16 @@ func NewRepository(path string) (*Repository, error) {
 
 	// Initialize subsystems
 	if repo.objects, err = objects.NewStore(minigitDir); err != nil {
-		return nil, fmt.Errorf("Failed to initialize object store: %w", err)
+		return nil, fmt.Errorf("failed to initialize object store: %w", err)
 	}
 	if repo.index, err = objects.NewIndex(minigitDir); err != nil {
-		return nil, fmt.Errorf("Failed to initialize index: %w", err)
+		return nil, fmt.Errorf("failed to initialize index: %w", err)
 	}
 	if repo.refs, err = objects.NewManager(minigitDir); err != nil {
-		return nil, fmt.Errorf("Failed to initialzie manager: %w", err)
+		return nil, fmt.Errorf("failed to initialzie manager: %w", err)
 	}
 	if repo.config, err = objects.NewConfig(minigitDir); err != nil {
-		return nil, fmt.Errorf("Failed to initialize config: %w", err)
+		return nil, fmt.Errorf("failed to initialize config: %w", err)
 	}
 
 	return repo, nil
@@ -66,7 +66,7 @@ func (r *Repository) Initialize() error {
 	for _, dir := range dirs {
 		// 0755 ~~ rwxr-xr-x
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("Failed to create directory %s: %w", dir, err)
+			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
 
