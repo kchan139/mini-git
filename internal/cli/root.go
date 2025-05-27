@@ -29,7 +29,7 @@ func Execute() error {
 	cmd, exists = commands[cmdName]
 
 	if !exists {
-		return fmt.Errorf("Unknown command: %s", cmdName)
+		return fmt.Errorf("unknown command: %s", cmdName)
 	}
 
 	return cmd.Handler(os.Args[2:])
