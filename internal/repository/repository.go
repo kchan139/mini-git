@@ -61,7 +61,7 @@ func (r *Repository) Initialize() error {
 		r.minigitDir,
 		filepath.Join(r.minigitDir, "objects"),
 		filepath.Join(r.minigitDir, "refs"),
-		filepath.Join(r.minigitDir, "refs", "head"),
+		filepath.Join(r.minigitDir, "refs", "heads"),
 	}
 
 	for _, dir := range dirs {
