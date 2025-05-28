@@ -1,5 +1,5 @@
-# MiniGit
-A simple version control system (Mini Git) written in Go
+# MyGit
+A simplified version control system (similar to git) written in Go
 
 ## Usage
 ### Build
