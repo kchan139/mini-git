@@ -26,7 +26,7 @@ func Execute() error {
 	}
 
 	cmdName := os.Args[1]
-	cmd, exists = commands[cmdName]
+	cmd, exists := commands[cmdName]
 
 	if !exists {
 		return fmt.Errorf("unknown command: %s", cmdName)
