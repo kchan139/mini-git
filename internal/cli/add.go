@@ -20,6 +20,16 @@ func handleAdd(args []string) error {
 	}
 
 	for _, arg := range args {
+		// Special case for "."
+		if arg == "." {
+			repoRoot := repo.GetWorkingDirectory()
+			err := addFile(repo, repoRoot)
+			if err != nil {
+				return fmt.Errorf("failed to add directory: %w", err)
+			}
+			continue
+		}
+
 		if err := addFile(repo, arg); err != nil {
 			return fmt.Errorf("failed to add '%s': %w", arg, err)
 		}
@@ -70,7 +80,7 @@ func addFile(repo *repository.Repository, filePath string) error {
 }
 
 func addDirectory(repo *repository.Repository, dirPath string) error {
-	repoRoot := getRepoRoot(dirPath)
+	repoRoot := repo.GetWorkingDirectory()
 	if repoRoot == "" {
 		return fmt.Errorf("not in a repository")
 	}
@@ -117,21 +127,4 @@ func addSingleFile(repo *repository.Repository, absPath string, info os.FileInfo
 	}
 
 	return nil
-}
-
-func getRepoRoot(path string) string {
-	dir := filepath.Dir(path)
-	for {
-		minigitDir := filepath.Join(dir, ".minigit")
-		if _, err := os.Stat(minigitDir); err == nil {
-			return dir
-		}
-
-		parentDir := filepath.Dir(dir)
-		if parentDir == dir {
-			break
-		}
-		dir = parentDir
-	}
-	return ""
 }
