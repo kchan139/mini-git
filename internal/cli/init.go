@@ -46,6 +46,6 @@ func handleInit(args []string) error {
 		return fmt.Errorf("failed to initialize repository: %w", err)
 	}
 
-	fmt.Printf("Initialized empty minigi repository in %s\n", minigitDir)
+	fmt.Printf("Initialized empty MiniGit repository in %s\n", minigitDir)
 	return nil
 }
