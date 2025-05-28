@@ -72,5 +72,5 @@ func (r *Repository) Initialize() error {
 	}
 
 	// Initialize HEAD to point to main branch
-	return r.refs.SetHead("refs/head/main")
+	return r.refs.SetHead("refs/heads/main")
 }
