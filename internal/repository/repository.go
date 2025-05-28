@@ -9,6 +9,7 @@ import (
 	"minigit/internal/config"
 	"minigit/internal/index"
 	"minigit/internal/objects"
+	"minigit/internal/refs"
 )
 
 // Repository represents the main interface to a MiniGit repository
@@ -40,13 +41,13 @@ func NewRepository(path string) (*Repository, error) {
 	if repo.objects, err = objects.NewStore(minigitDir); err != nil {
 		return nil, fmt.Errorf("failed to initialize object store: %w", err)
 	}
-	if repo.index, err = objects.NewIndex(minigitDir); err != nil {
+	if repo.index, err = index.NewIndex(minigitDir); err != nil {
 		return nil, fmt.Errorf("failed to initialize index: %w", err)
 	}
-	if repo.refs, err = objects.NewManager(minigitDir); err != nil {
+	if repo.refs, err = refs.NewManager(minigitDir); err != nil {
 		return nil, fmt.Errorf("failed to initialzie manager: %w", err)
 	}
-	if repo.config, err = objects.NewConfig(minigitDir); err != nil {
+	if repo.config, err = config.NewConfig(minigitDir); err != nil {
 		return nil, fmt.Errorf("failed to initialize config: %w", err)
 	}
 
