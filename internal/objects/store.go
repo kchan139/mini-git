@@ -42,7 +42,7 @@ func NewStore(minigitDir string) (*Store, error) {
 func (s *Store) HashContent(objType ObjectType, content []byte) string {
 	// Git's object format: "type size\0content"
 	contentSize := len(content)
-	header := fmt.Sprintf("%s %d\\0", objType, contentSize)
+	header := fmt.Sprintf("%s %d\x00", objType, contentSize)
 	fullContent := append([]byte(header), content...)
 
 	hash := sha1.Sum(fullContent)
@@ -69,7 +69,7 @@ func (s *Store) StoreObject(objType ObjectType, content []byte) (string, error) 
 
 	// Prepare content with header
 	contentSize := len(content)
-	header := fmt.Sprintf("%s %d\\0", objType, contentSize)
+	header := fmt.Sprintf("%s %d\x00", objType, contentSize)
 	fullContent := append([]byte(header), content...)
 
 	// Compress with zlib
