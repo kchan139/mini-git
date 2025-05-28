@@ -4,6 +4,7 @@ package index
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"time"
@@ -61,9 +62,7 @@ func (idx *Index) RemoveEntry(path string) error {
 // Returns all staged entries
 func (idx *Index) GetEntries() map[string]*Entry {
 	result := make(map[string]*Entry)
-	for k, v := range idx.entries {
-		result[k] = v
-	}
+	maps.Copy(result, idx.entries)
 	return result
 }
 
