@@ -95,22 +95,18 @@ func addSingleFile(repo *repository.Repository, absPath string, info os.FileInfo
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
-	repoRoot := getRepoRoot(absPath)
-	if repoRoot == "" {
-		return fmt.Errorf("not in a repository")
-	}
-
 	// Store as blob object and get hash
-	store, err := objects.NewStore(filepath.Join(repoRoot, ".minigit"))
+	store, err := repo.GetObjectStore()
 	if err != nil {
 		return fmt.Errorf("failed to access object store: %w", err)
 	}
 
 	hash, err := store.StoreObject(objects.BlobObject, content)
 	if err != nil {
-		return fmt.Errorf("failed to store blob object: %w", err)
+		return fmt.Errorf("failed to store object: %w", err)
 	}
 
+	repoRoot := repo.GetWorkingDirectory()
 	relPath, err := filepath.Rel(repoRoot, absPath)
 	if err != nil {
 		return fmt.Errorf("failed to get relative path: %w", err)
