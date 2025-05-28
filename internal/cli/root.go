@@ -36,10 +36,10 @@ func Execute() error {
 }
 
 func showHelp() error {
-	fmt.Println("Usage: minigit <command>")
+	fmt.Println("Usage: ./mygit <command>")
 	fmt.Println("Available commands:")
 	for _, cmd := range commands {
-		fmt.Printf("	%-7s %s\n", cmd.Name, cmd.Description)
+		fmt.Printf(" - %-7s %s\n", cmd.Name, cmd.Description)
 	}
 	return nil
 }
