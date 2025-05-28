@@ -1,6 +1,3 @@
-// Organized test structure for test/ directory
-
-// File: test/unit/cli_init_test.go
 package unit
 
 import (
