@@ -37,18 +37,15 @@ func CompareFiles(oldContent, newContent []byte) *FileDiff {
 		Changes: make([]LineChange, 0),
 	}
 
-	maxLines := len(oldLines)
-	if len(newLines) > maxLines {
-		maxLines = len(newLines)
-	}
+	maxLines := max(len(oldLines), len(newLines))
 
 	for i := 0; i < maxLines; i++ {
 		var oldLine, newLine string
 
-		if i < len(oldLine) {
+		if i < len(oldLines) {
 			oldLine = oldLines[i]
 		}
-		if i < len(newLine) {
+		if i < len(newLines) {
 			newLine = newLines[i]
 		}
 
