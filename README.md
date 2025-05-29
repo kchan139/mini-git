@@ -27,3 +27,18 @@ make build
 # Clean build artifacts
 make clean
 ```
+
+## Implementation Notes
+- Stores data in `.minigit` directory
+- Uses SHA-1 hashing for objects
+- Compression with zlib
+- JSON-based index for staging
+- First-parent-only commit history
+
+## Limitations
+- No branching/checkout (yet)
+- No diff/log/status (yet)
+- No remote operations
+- Minimal error handling
+
+> Note: Educational project - not for production use.
