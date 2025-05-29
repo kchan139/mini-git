@@ -45,8 +45,8 @@ func handleCommit(args []string) error {
 		return err
 	}
 
+	// Create tree from current index
 	indexEntries := make(map[string]*objects.IndexEntry)
-	// Convert indexEntries format to match CreateTreeFromIndex return type
 	for path, entry := range entries {
 		indexEntries[path] = &objects.IndexEntry{
 			Path: entry.Path,
@@ -55,20 +55,51 @@ func handleCommit(args []string) error {
 		}
 	}
 
-	treeHash, err := store.CreateTreeFromIndex(indexEntries)
+	newTreeHash, err := store.CreateTreeFromIndex(indexEntries)
 	if err != nil {
 		return fmt.Errorf("failed to create tree: %w", err)
 	}
 
-	var parents []string
+	// Check if there's any changes compared to the last commit
 	refsMan, err := repo.GetRefsManager()
 	if err != nil {
 		return fmt.Errorf("failed to get refs manager: %w", err)
 	}
 
-	// Get current HEAD
 	headRef, err := refsMan.GetHead()
+	var lastCommitTreeHash string
 
+	if err == nil {
+		var lastCommitHash string
+		if strings.HasPrefix(headRef, "refs/heads/") {
+			// HEAD points to a branch
+			branchName := strings.TrimPrefix(headRef, "refs/heads/")
+			if commit, err := refsMan.GetBranch(branchName); err == nil {
+				lastCommitHash = commit
+			}
+		} else {
+			// HEAD points to a commit directly
+			lastCommitHash = headRef
+		}
+
+		// Get the tree hash from the last commit
+		if lastCommitHash != "" {
+			if lastCommitObj, err := store.LoadObject(lastCommitHash); err == nil {
+				if lastCommit, err := store.ParseCommit(lastCommitObj.Content); err == nil {
+					lastCommitTreeHash = lastCommit.Tree
+				}
+			}
+		}
+	}
+
+	// If the tree hasn't changed, don't create a new commit
+	if lastCommitTreeHash == newTreeHash {
+		fmt.Println("On branch main")
+		fmt.Println("nothing to commit, working tree clean")
+		return nil
+	}
+
+	var parents []string
 	if err == nil && !strings.HasPrefix(headRef, "refs/heads/") {
 		// HEAD points to a commit directly
 		parents = append(parents, headRef)
@@ -81,7 +112,7 @@ func handleCommit(args []string) error {
 		// If branch doesn't exist yet, parents will be empty (first commit)
 	}
 
-	commitHash, err := store.CreateCommit(treeHash, parents, "", message)
+	commitHash, err := store.CreateCommit(newTreeHash, parents, "", message)
 	if err != nil {
 		return fmt.Errorf("failed to create commit: %w", err)
 	}
