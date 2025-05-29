@@ -1,154 +1,83 @@
 package unit
 
 import (
-	"os"
 	"strings"
 	"testing"
 
-	"minigit/internal/cli"
+	"minigit/test/fixtures"
 )
 
 func TestCommitWithMessage(t *testing.T) {
-	tempDir := t.TempDir()
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
+	// prepare
+	fixtures.CreateFiles(t, repoPath, map[string]string{"test.txt": "test content"})
+	fixtures.RunCLI(t, "add", "test.txt")
 
-	testFile := "test.txt"
-	testContent := "test content"
-	if err := os.WriteFile(testFile, []byte(testContent), 0644); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", testFile}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "Initial commit"}
-	err := cli.Execute()
-
-	if err != nil {
-		t.Fatalf("commit failed: %v", err)
-	}
+	// commit
+	fixtures.RunCLI(t, "commit", "-m", "Initial commit")
 }
 
 func TestCommitEmptyMessage(t *testing.T) {
-	tempDir := t.TempDir()
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
+	// prepare
+	fixtures.CreateFiles(t, repoPath, map[string]string{"test.txt": "content"})
+	fixtures.RunCLI(t, "add", "test.txt")
 
-	testFile := "test.txt"
-	if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", testFile}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", ""}
-	err := cli.Execute()
-
+	// commit with empty -m
+	err := fixtures.TryCLI(t, "commit", "-m", "")
 	if err == nil {
-		t.Fatal("expected error for empty commit message")
+		t.Fatal("expected error for empty message")
 	}
-
 	if !strings.Contains(err.Error(), "switch `m' requires a value") {
-		t.Fatalf("wrong error message: %v", err)
+		t.Fatalf("wrong error: %v", err)
 	}
 }
 
 func TestCommitNothingToCommit(t *testing.T) {
-	tempDir := t.TempDir()
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "Empty commit"}
-	err := cli.Execute()
-
-	if !strings.Contains(err.Error(), "no changes added to commit") {
-		t.Fatalf("wrong error message: %v", err)
+	// commit straight away
+	err := fixtures.TryCLI(t, "commit", "-m", "Empty commit")
+	if err == nil || !strings.Contains(err.Error(), "no changes added to commit") {
+		t.Fatalf("expected no changes error, got %v", err)
 	}
 }
 
 func TestCommitNoChanges(t *testing.T) {
-	tempDir := t.TempDir()
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
+	fixtures.CreateFiles(t, repoPath, map[string]string{"test.txt": "content"})
+	fixtures.RunCLI(t, "add", "test.txt")
+	fixtures.RunCLI(t, "commit", "-m", "First commit")
 
-	testFile := "test.txt"
-	if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", testFile}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "First commit"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("first commit failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "Second commit"}
-	err := cli.Execute()
-
-	if !strings.Contains(err.Error(), "no changes added to commit") {
-		t.Fatalf("wrong error message: %v", err)
+	// second commit without changes
+	err := fixtures.TryCLI(t, "commit", "-m", "Second commit")
+	if err == nil || !strings.Contains(err.Error(), "no changes added to commit") {
+		t.Fatalf("expected no changes error, got %v", err)
 	}
 }
 
 func TestCommitMissingMessage(t *testing.T) {
-	tempDir := t.TempDir()
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
+	fixtures.CreateFiles(t, repoPath, map[string]string{"test.txt": "content"})
+	fixtures.RunCLI(t, "add", "test.txt")
 
-	testFile := "test.txt"
-	if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", testFile}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit"}
-	err := cli.Execute()
-
+	// omit -m
+	err := fixtures.TryCLI(t, "commit")
 	if err == nil {
-		t.Fatal("expected error for missing -m flag")
+		t.Fatal("expected missing -m error")
 	}
 }

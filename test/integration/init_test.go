@@ -5,42 +5,30 @@ import (
 	"path/filepath"
 	"testing"
 
-	"minigit/internal/cli"
+	"minigit/test/fixtures"
 )
 
 func TestCompleteInitWorkflow(t *testing.T) {
-	tempDir := t.TempDir()
-	repoPath := filepath.Join(tempDir, "integration_repo")
-
-	os.Args = []string{"minigit", "init", repoPath}
-	err := cli.Execute()
-
-	if err != nil {
-		t.Fatalf("integration test failed: %v", err)
-	}
-
-	// Verify complete structure
+	repoPath := fixtures.InitRepo(t)
 	checkCompleteStructure(t, repoPath)
 }
 
 func checkCompleteStructure(t *testing.T, repoPath string) {
-	// All required paths with their types
 	paths := map[string]bool{
-		filepath.Join(repoPath, ".minigit"):                  true,  // directory
-		filepath.Join(repoPath, ".minigit", "objects"):       true,  // directory
-		filepath.Join(repoPath, ".minigit", "refs"):          true,  // directory
-		filepath.Join(repoPath, ".minigit", "refs", "heads"): true,  // directory
-		filepath.Join(repoPath, ".minigit", "HEAD"):          false, // file
+		filepath.Join(repoPath, ".minigit"):                  true,
+		filepath.Join(repoPath, ".minigit", "objects"):       true,
+		filepath.Join(repoPath, ".minigit", "refs"):          true,
+		filepath.Join(repoPath, ".minigit", "refs", "heads"): true,
+		filepath.Join(repoPath, ".minigit", "HEAD"):          false,
 	}
 
-	for path, shouldBeDir := range paths {
+	for path, isDir := range paths {
 		info, err := os.Stat(path)
 		if err != nil {
-			t.Fatalf("missing path: %s", path)
+			t.Fatalf("missing: %s", path)
 		}
-		if info.IsDir() != shouldBeDir {
-			t.Fatalf("wrong type for %s: isDir=%v, expected=%v",
-				path, info.IsDir(), shouldBeDir)
+		if info.IsDir() != isDir {
+			t.Fatalf("wrong type for %s: isDir=%v", path, isDir)
 		}
 	}
 }

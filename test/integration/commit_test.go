@@ -1,158 +1,82 @@
 package integration
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
-	"minigit/internal/cli"
 	"minigit/internal/repository"
+	"minigit/test/fixtures"
 )
 
 func TestCommitWorkflow(t *testing.T) {
-	tempDir := t.TempDir()
-	repoPath := filepath.Join(tempDir, "test_repo")
+	// init
+	repoPath := fixtures.InitRepo(t)
 
-	os.Args = []string{"minigit", "init", repoPath}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-
+	// create files
 	testFiles := map[string]string{
 		"README.md": "# Test Repository",
 		"main.go":   "package main\n\nfunc main() {}",
 		"utils.go":  "package main\n\nfunc helper() {}",
 	}
+	fixtures.CreateFiles(t, repoPath, testFiles)
 
-	for file, content := range testFiles {
-		fullPath := filepath.Join(repoPath, file)
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
-			t.Fatalf("failed to create file %s: %v", file, err)
-		}
-	}
+	// cd
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(repoPath)
-
+	// add all
 	for file := range testFiles {
-		os.Args = []string{"minigit", "add", file}
-		if err := cli.Execute(); err != nil {
-			t.Fatalf("add %s failed: %v", file, err)
-		}
+		fixtures.RunCLI(t, "add", file)
 	}
 
-	os.Args = []string{"minigit", "commit", "-m", "Initial commit with multiple files"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("commit failed: %v", err)
-	}
+	// commit
+	fixtures.RunCLI(t, "commit", "-m", "Initial commit with multiple files")
 
 	verifyCommitState(t, repoPath, testFiles)
 }
 
 func TestMultipleCommits(t *testing.T) {
-	tempDir := t.TempDir()
-	repoPath := filepath.Join(tempDir, "test_repo")
+	// init
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init", repoPath}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
+	// first file & commit
+	fixtures.CreateFiles(t, repoPath, map[string]string{"file1.txt": "content1"})
+	fixtures.RunCLI(t, "add", "file1.txt")
+	fixtures.RunCLI(t, "commit", "-m", "First commit")
 
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(repoPath)
-
-	file1 := "file1.txt"
-	if err := os.WriteFile(file1, []byte("content1"), 0644); err != nil {
-		t.Fatalf("failed to create file1: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", file1}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add file1 failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "First commit"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("first commit failed: %v", err)
-	}
-
-	file2 := "file2.txt"
-	if err := os.WriteFile(file2, []byte("content2"), 0644); err != nil {
-		t.Fatalf("failed to create file2: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", file2}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add file2 failed: %v", err)
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "Second commit"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("second commit failed: %v", err)
-	}
+	// second file & commit
+	fixtures.CreateFiles(t, repoPath, map[string]string{"file2.txt": "content2"})
+	fixtures.RunCLI(t, "add", "file2.txt")
+	fixtures.RunCLI(t, "commit", "-m", "Second commit")
 
 	verifyMultipleCommitsState(t, repoPath)
 }
 
 func TestCommitClearsIndex(t *testing.T) {
-	tempDir := t.TempDir()
-	repoPath := filepath.Join(tempDir, "test_repo")
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	os.Args = []string{"minigit", "init", repoPath}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("init failed: %v", err)
+	// add & pre-check
+	fixtures.CreateFiles(t, repoPath, map[string]string{"test.txt": "content"})
+	fixtures.RunCLI(t, "add", "test.txt")
+
+	repo, _ := repository.NewRepository(repoPath)
+	index, _ := repo.GetIndex()
+	if len(index.GetEntries()) != 1 {
+		t.Fatalf("expected 1 entry pre-commit")
 	}
 
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(repoPath)
+	// commit
+	fixtures.RunCLI(t, "commit", "-m", "Test commit")
 
-	testFile := "test.txt"
-	if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
-	}
-
-	os.Args = []string{"minigit", "add", testFile}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("add failed: %v", err)
-	}
-
-	repo, err := repository.NewRepository(repoPath)
-	if err != nil {
-		t.Fatalf("failed to open repository: %v", err)
-	}
-
-	index, err := repo.GetIndex()
-	if err != nil {
-		t.Fatalf("failed to get index: %v", err)
-	}
-
-	entries := index.GetEntries()
-	if len(entries) != 1 {
-		t.Fatalf("expected 1 entry before commit, got %d", len(entries))
-	}
-
-	os.Args = []string{"minigit", "commit", "-m", "Test commit"}
-	if err := cli.Execute(); err != nil {
-		t.Fatalf("commit failed: %v", err)
-	}
-
-	repoCheck, err := repository.NewRepository(repoPath)
-	if err != nil {
-		t.Fatalf("failed to reopen repository: %v", err)
-	}
-
-	indexCheck, err := repoCheck.GetIndex()
-	if err != nil {
-		t.Fatalf("failed to get index after commit: %v", err)
-	}
-
-	entriesAfter := indexCheck.GetEntries()
-	if len(entriesAfter) != 0 {
-		t.Fatalf("expected 0 entries after commit, got %d", len(entriesAfter))
+	// post-check
+	repo2, _ := repository.NewRepository(repoPath)
+	index2, _ := repo2.GetIndex()
+	if len(index2.GetEntries()) != 0 {
+		t.Fatalf("expected 0 entries post-commit")
 	}
 }
 

@@ -6,61 +6,34 @@ import (
 	"strings"
 	"testing"
 
-	"minigit/internal/cli"
+	"minigit/test/fixtures"
 )
 
 func TestInitCurrentDirectory(t *testing.T) {
-	tempDir := t.TempDir()
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
-
-	os.Args = []string{"minigit", "init"}
-	err := cli.Execute()
-
-	if err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-
-	if _, err := os.Stat(".minigit"); os.IsNotExist(err) {
-		t.Fatal(".minigit directory not created")
+	cwd := fixtures.InitRepo(t) // inits inside a temp dir
+	if _, err := os.Stat(filepath.Join(cwd, ".minigit")); os.IsNotExist(err) {
+		t.Fatal(".minigit not created")
 	}
 }
 
 func TestInitSpecificDirectory(t *testing.T) {
-	tempDir := t.TempDir()
-	repoPath := filepath.Join(tempDir, "new_repo")
+	// mimic CLI: init new_repo under temp
+	repoPath := filepath.Join(t.TempDir(), "new_repo")
+	fixtures.RunCLI(t, "init", repoPath)
 
-	os.Args = []string{"minigit", "init", repoPath}
-	err := cli.Execute()
-
-	if err != nil {
-		t.Fatalf("init failed: %v", err)
-	}
-
-	minigitPath := filepath.Join(repoPath, ".minigit")
-	if _, err := os.Stat(minigitPath); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(repoPath, ".minigit")); os.IsNotExist(err) {
 		t.Fatal("repository not created at specified path")
 	}
 }
 
 func TestInitDuplicateRepository(t *testing.T) {
-	tempDir := t.TempDir()
-	os.Chdir(tempDir)
+	repoPath := fixtures.InitRepo(t)
+	cleanup := fixtures.Chdir(t, repoPath)
+	defer cleanup()
 
-	// First init
-	os.Args = []string{"minigit", "init"}
-	err := cli.Execute()
-	if err != nil {
-		t.Fatalf("first init failed: %v", err)
-	}
-
-	// Duplicate init should fail
-	err = cli.Execute()
-	if err == nil {
-		t.Fatal("duplicate init should fail")
-	}
-	if !strings.Contains(err.Error(), "already a minigit repository") {
-		t.Fatalf("wrong error message: %v", err)
+	// second init should error
+	err := fixtures.TryCLI(t, "init")
+	if err == nil || !strings.Contains(err.Error(), "already a minigit repository") {
+		t.Fatalf("expected duplicate-repo error, got %v", err)
 	}
 }
