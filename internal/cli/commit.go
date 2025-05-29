@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"minigit/internal/diff"
 	"minigit/internal/objects"
 	"strings"
 )
@@ -60,7 +61,7 @@ func handleCommit(args []string) error {
 		return fmt.Errorf("failed to create tree: %w", err)
 	}
 
-	// Check if there's any changes compared to the last commit
+	// Check if we have changes compared to the last commit
 	refsMan, err := repo.GetRefsManager()
 	if err != nil {
 		return fmt.Errorf("failed to get refs manager: %w", err)
@@ -141,6 +142,12 @@ func handleCommit(args []string) error {
 		return fmt.Errorf("failed to clear index: %w", err)
 	}
 
+	// Calculate diff statistics
+	stats, err := diff.CalculateDiffStats(repo, entries, lastCommitTreeHash)
+	if err != nil {
+		return fmt.Errorf("failed to calculate diff stats: %w", err)
+	}
+
 	// Print commit information (mimic real Git)
 	shortHash := commitHash
 	if len(commitHash) > 7 {
@@ -148,7 +155,30 @@ func handleCommit(args []string) error {
 	}
 
 	fmt.Printf("[%s] %s\n", shortHash, message)
-	fmt.Printf("%d file(s) changed\n", len(entries))
+
+	// Print diff statistics
+	filesChanged := len(entries)
+	if filesChanged == 1 {
+		fmt.Printf(" %d file changed", filesChanged)
+	} else {
+		fmt.Printf(" %d files changed", filesChanged)
+	}
+
+	if stats.Insertions > 0 {
+		fmt.Printf(", %d insertion(+)", stats.Insertions)
+		if stats.Insertions > 1 {
+			fmt.Print("s")
+		}
+	}
+
+	if stats.Deletions > 0 {
+		fmt.Printf(", %d deletion(-)", stats.Deletions)
+		if stats.Deletions > 1 {
+			fmt.Print("s")
+		}
+	}
+
+	fmt.Println()
 
 	return nil
 }
