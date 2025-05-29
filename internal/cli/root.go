@@ -13,11 +13,13 @@ type Command struct {
 }
 
 var commands = map[string]Command{
-	"init":   {"init", "Initialize a new repository", handleInit},
-	"add":    {"add", "Add files to staging area", handleAdd},
-	"commit": {"commit", "Create a new commit", handleCommit},
-	"status": {"status", "Show repository status", handleStatus},
-	"log":    {"log", "Show commit history", handleLog},
+	"init":     {"init", "Initialize a new repository", handleInit},
+	"add":      {"add", "Add files to staging area", handleAdd},
+	"commit":   {"commit", "Create a new commit", handleCommit},
+	"status":   {"status", "Show repository status", handleStatus},
+	"log":      {"log", "Show commit history", handleLog},
+	"branch":   {"branch", "List or create branch", handleBranch},
+	"checkout": {"checkout", "Switch branches or restore files", handleCheckout},
 }
 
 func Execute() error {
@@ -39,7 +41,7 @@ func showHelp() error {
 	fmt.Println("Usage: ./mygit <command>")
 	fmt.Println("Available commands:")
 	for _, cmd := range commands {
-		fmt.Printf(" - %-7s %s\n", cmd.Name, cmd.Description)
+		fmt.Printf(" - %-10s %s\n", cmd.Name, cmd.Description)
 	}
 	return nil
 }
