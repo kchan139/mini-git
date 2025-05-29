@@ -145,3 +145,73 @@ func (store *Store) serializeTree(entries []TreeEntry) []byte {
 
 	return content
 }
+
+func (store *Store) ParseTree(content []byte) (*Tree, error) {
+	tree := &Tree{
+		Entries: make([]TreeEntry, 0),
+	}
+
+	i := 0
+	for i < len(content) {
+		// Find the space that separates mode from name
+		spaceIdx := -1
+		for j := i; j < len(content); j++ {
+			if content[j] == ' ' {
+				spaceIdx = j
+				break
+			}
+		}
+		if spaceIdx == -1 {
+			break
+		}
+
+		// Parse mode
+		modeStr := string(content[i:spaceIdx])
+		var mode os.FileMode
+		var objType ObjectType
+
+		if modeStr == "40000" {
+			mode = 0755
+			objType = TreeObject
+		} else {
+			// Convert octal string to FileMode
+			if modeInt, err := fmt.Sscanf(modeStr, "%o", &mode); err != nil || modeInt != 1 {
+				return nil, fmt.Errorf("invalid mode: %s", modeStr)
+			}
+			objType = BlobObject
+		}
+
+		// Find the null byte that separates name from hash
+		nullIdx := -1
+		for j := spaceIdx + 1; j < len(content); j++ {
+			if content[j] == 0 {
+				nullIdx = j
+				break
+			}
+		}
+		if nullIdx == -1 {
+			break
+		}
+
+		// Parse name
+		name := string(content[spaceIdx+1 : nullIdx])
+
+		// Parse hash (20 bytes after null)
+		if nullIdx+20 >= len(content) {
+			break
+		}
+		hashBytes := content[nullIdx+1 : nullIdx+21]
+		hash := fmt.Sprintf("%x", hashBytes)
+
+		tree.Entries = append(tree.Entries, TreeEntry{
+			Mode: mode,
+			Name: name,
+			Hash: hash,
+			Type: objType,
+		})
+
+		i = nullIdx + 21
+	}
+
+	return tree, nil
+}
