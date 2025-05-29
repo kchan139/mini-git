@@ -1,23 +1,29 @@
-# MyGit
-A simplified version control system (similar to git) written in Go
+# MiniGit
+
+A minimal Git implementation in Go.
+
+## Features
+- `init`: Initialize new repository
+- `add`: Stage files/directories
+- `commit`: Create commits with `-m` flag
+- Basic object storage (blobs, trees, commits)
+- Simple staging area management
 
 ## Usage
-### Build
+```sh
+# Build project
+make build
 
-```bash
-make
-```
+# Initialize repository
+./mygit init
 
-This will build the binary to `bin/mygit`.
+# Add files
+./mygit add <file>  # Add specific file
+./mygit add .       # Add all files
 
-### Run
+# Commit changes
+./mygit commit -m "Commit message"
 
-```bash
-./bin/mygit
-```
-
-### Clean
-
-```bash
+# Clean build artifacts
 make clean
 ```
