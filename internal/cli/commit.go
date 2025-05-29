@@ -10,6 +10,10 @@ func handleCommit(args []string) error {
 	var message string
 	argsLen := len(args)
 
+	if argsLen == 0 {
+		return fmt.Errorf("interactive commit (opening editor) not implemented. please use `-m` to pass a message")
+	}
+
 	for i, arg := range args {
 		if arg == "-m" && i+1 < argsLen {
 			message = args[i+1]
