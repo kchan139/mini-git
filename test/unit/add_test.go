@@ -1,4 +1,3 @@
-// File: test/unit/add_test.go
 package unit
 
 import (

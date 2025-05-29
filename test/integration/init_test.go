@@ -1,4 +1,3 @@
-// File: test/integration/full_init_test.go
 package integration
 
 import (

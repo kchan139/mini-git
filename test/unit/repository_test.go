@@ -1,4 +1,3 @@
-// File: test/unit/repository_test.go
 package unit
 
 import (
