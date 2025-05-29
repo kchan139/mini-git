@@ -34,7 +34,8 @@ func handleInit(args []string) error {
 
 	minigitDir := filepath.Join(absPath, ".minigit")
 	if _, err := os.Stat(minigitDir); err == nil {
-		return fmt.Errorf("already a minigit repository (or subdirectory)")
+		fmt.Printf("Reinitialized existing MiniGit repository in %s\n", absPath)
+		return nil
 	}
 
 	repo, err := repository.NewRepository(absPath)
