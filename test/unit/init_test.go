@@ -3,7 +3,6 @@ package unit
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"minigit/test/fixtures"
@@ -31,9 +30,9 @@ func TestInitDuplicateRepository(t *testing.T) {
 	cleanup := fixtures.Chdir(t, repoPath)
 	defer cleanup()
 
-	// second init should error
+	// second init should succeed (reinitialize)
 	err := fixtures.TryCLI(t, "init")
-	if err == nil || !strings.Contains(err.Error(), "already a minigit repository") {
-		t.Fatalf("expected duplicate-repo error, got %v", err)
+	if err != nil {
+		t.Fatalf("expected reinit to succeed, got error: %v", err)
 	}
 }
