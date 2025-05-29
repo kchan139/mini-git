@@ -72,6 +72,16 @@ func (idx *Index) Clear() error {
 	return idx.save()
 }
 
+// Check if index is empty
+func (idx *Index) IsEmpty() bool {
+	return len(idx.entries) == 0
+}
+
+// Get number of entries
+func (idx *Index) Count() int {
+	return len(idx.entries)
+}
+
 // Utils functions
 func (idx *Index) load() error {
 	data, err := os.ReadFile(idx.indexPath)
