@@ -90,8 +90,8 @@ func addDirectory(repo *repository.Repository, dirPath string) error {
 			return err
 		}
 
-		// Skip directories and .minigit/
-		if info.IsDir() || strings.Contains(path, ".minigit") {
+		// Skip directories and .*git/
+		if info.IsDir() || strings.Contains(path, ".minigit") || strings.Contains(path, ".git") {
 			return nil
 		}
 

@@ -20,6 +20,8 @@ var commands = map[string]Command{
 	"log":      {"log", "Show commit history", handleLog},
 	"branch":   {"branch", "List or create branch", handleBranch},
 	"checkout": {"checkout", "Switch branches or restore files", handleCheckout},
+	"reset":    {"reset", "Reset current HEAD to the specified state", handleReset},
+	"restore":  {"restore", "Restore working tree files", handleRestore},
 }
 
 func Execute() error {
